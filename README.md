@@ -41,3 +41,19 @@ Design a decentralized voting system using blockchain technology to ensure trans
 3. Implement smart contracts to manage voting and prevent double-voting.
 4. Store vote data on the blockchain to ensure transparency and immutability.
 5. Provide a user interface to create polls, vote, and view poll results.
+
+---
+
+## Submission and Review Process
+
+At the beginning of the training program, each developer should create a new branch in the project repository with a clear naming convention, such as `<developer_name>_challenge_<number>`. For example, if Jane Doe worked on Challenge 1, her branch would be named `jane_doe_challenge_1`. Throughout the week, developers can push their progress to this branch, allowing others to monitor and provide early feedback.
+
+When reviewing your colleagues' work, approach the process with the mindset of an audit. Carefully scrutinize the code for potential mistakes, security vulnerabilities, and areas where improvements could be made. Constructive criticism and suggestions for enhancements are highly encouraged.
+
+### Collaboration and Exploration
+
+We encourage developers to explore different tools and approaches during this training program. Feel free to collaborate and discuss your implementation with other team members. Sharing insights and learning from each other's experiences can be highly beneficial and lead to more robust solutions.
+
+### Alternative Projects
+
+The provided challenges serve as recommendations to help developers transition to Cairo 1.0. However, if you have a different project idea that you'd like to work on, please feel free to pursue it. Ensure that you share your alternative project with the team, so others are aware of your work and can provide feedback or collaborate as needed.
