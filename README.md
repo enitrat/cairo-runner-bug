@@ -44,6 +44,26 @@ Design a decentralized voting system using blockchain technology to ensure trans
 
 ---
 
+## Challenge 4: NFT Ticketing Platform
+
+**Project Description:**  
+Develop an NFT ticketing platform that allows event organizers to issue, sell, and manage digital tickets represented as non-fungible tokens. The platform should offer configurable options to control ticket transferability, transfer fees, and other customizable parameters.
+
+**Key Features:**
+1. User registration and authentication system for event organizers and attendees.
+2. Functionality for event organizers to create and manage events, including event details, ticket pricing, and total ticket supply.
+3. Implement smart contracts to mint NFT tickets, manage ticket sales, and enforce customizable rules such as transferability and transfer fees.
+4. Allow users to buy, sell, and transfer NFT tickets, while adhering to the rules set by the event organizer.
+5. Provide a user interface for event organizers to configure ticket options, and for users to browse, purchase, and manage their tickets.
+
+**Configurable Options:**
+1. Ticket transferability: Allow event organizers to set whether tickets can be transferred between users or not.
+2. Transfer fee: If ticket transfers are allowed, enable organizers to set a fee (either a fixed amount or a percentage) to be paid to the ticket issuer upon each transfer.
+3. Ticket refund policy: Allow organizers to specify a refund policy for their event, such as a deadline for refunds or a partial refund percentage.
+4. Additional customizable parameters as needed, to accommodate specific event requirements or preferences.
+
+---
+
 ## Submission and Review Process
 
 At the beginning of the training program, each developer should create a new branch in the project repository with a clear naming convention, such as `<developer_name>_challenge_<number>`. For example, if Jane Doe worked on Challenge 1, her branch would be named `jane_doe_challenge_1`. Throughout the week, developers can push their progress to this branch, allowing others to monitor and provide early feedback.
