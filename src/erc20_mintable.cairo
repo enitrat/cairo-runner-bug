@@ -3,7 +3,7 @@
 use starknet::ContractAddress;
 
 #[abi]
-trait IERC20 {
+trait IERC20Mintable {
     fn name() -> felt252;
     fn symbol() -> felt252;
     fn decimals() -> u8;
@@ -13,11 +13,13 @@ trait IERC20 {
     fn transfer(recipient: ContractAddress, amount: u256) -> bool;
     fn transfer_from(sender: ContractAddress, recipient: ContractAddress, amount: u256) -> bool;
     fn approve(spender: ContractAddress, amount: u256) -> bool;
+    fn mint(recipient: ContractAddress, amount: u256);
+    fn burn(amount: u256);
 }
 
 #[contract]
-mod ERC20 {
-    use super::IERC20;
+mod ERC20Mintable {
+    use super::IERC20Mintable;
     use starknet::get_caller_address;
     use starknet::ContractAddress;
     use starknet::contract_address::ContractAddressZeroable;
@@ -41,7 +43,7 @@ mod ERC20 {
     #[event]
     fn Approval(owner: ContractAddress, spender: ContractAddress, value: u256) {}
 
-    impl ERC20 of IERC20 {
+    impl ERC20 of IERC20Mintable {
         fn name() -> felt252 {
             _name::read()
         }
@@ -85,6 +87,15 @@ mod ERC20 {
             let caller = get_caller_address();
             _approve(caller, spender, amount);
             true
+        }
+
+        fn mint(recipient: ContractAddress, amount: u256) {
+            _mint(recipient, amount);
+        }
+
+        fn burn(amount: u256) {
+            let caller = get_caller_address();
+            _burn(caller, amount);
         }
     }
 
@@ -149,6 +160,16 @@ mod ERC20 {
     #[external]
     fn decrease_allowance(spender: ContractAddress, subtracted_value: u256) -> bool {
         _decrease_allowance(spender, subtracted_value)
+    }
+
+    #[external]
+    fn mint(recipient: ContractAddress, amount: u256) {
+        ERC20::mint(recipient, amount)
+    }
+
+    #[external]
+    fn burn(amount: u256) {
+        ERC20::burn(amount)
     }
 
     ///
