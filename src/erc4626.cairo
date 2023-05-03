@@ -36,6 +36,7 @@ trait IERC4626 {
 #[contract]
 mod ERC4626 {
     use super::IERC4626;
+    use openzeppelin::token::erc20::ERC20;
     use openzeppelin::token::erc20::IERC20Dispatcher;
     use openzeppelin::token::erc20::IERC20DispatcherTrait;
     use starknet::get_caller_address;
@@ -51,11 +52,6 @@ mod ERC4626 {
 
 
     struct Storage {
-        _name: felt252,
-        _symbol: felt252,
-        _total_supply: u256,
-        _balances: LegacyMap<ContractAddress, u256>,
-        _allowances: LegacyMap<(ContractAddress, ContractAddress), u256>,
         _asset: IERC20Dispatcher
     }
 
@@ -88,11 +84,11 @@ mod ERC4626 {
         ////////////////////////////////
 
         fn name() -> felt252 {
-            _name::read()
+            ERC20::_name::read()
         }
 
         fn symbol() -> felt252 {
-            _symbol::read()
+            ERC20::_symbol::read()
         }
 
         fn decimals() -> u8 {
@@ -100,36 +96,29 @@ mod ERC4626 {
         }
 
         fn total_supply() -> u256 {
-            _total_supply::read()
+            ERC20::_total_supply::read()
         }
 
         fn balance_of(account: ContractAddress) -> u256 {
-            _balances::read(account)
+            ERC20::_balances::read(account)
         }
 
         fn allowance(owner: ContractAddress, spender: ContractAddress) -> u256 {
-            _allowances::read((owner, spender))
+            ERC20::_allowances::read((owner, spender))
         }
 
         fn transfer(recipient: ContractAddress, amount: u256) -> bool {
-            let sender = get_caller_address();
-            _transfer(sender, recipient, amount);
-            true
+            ERC20::transfer(recipient, amount)
         }
 
         fn transfer_from(
             sender: ContractAddress, recipient: ContractAddress, amount: u256
         ) -> bool {
-            let caller = get_caller_address();
-            _spend_allowance(sender, caller, amount);
-            _transfer(sender, recipient, amount);
-            true
+            ERC20::transfer_from(sender, recipient, amount)
         }
 
         fn approve(spender: ContractAddress, amount: u256) -> bool {
-            let caller = get_caller_address();
-            _approve(caller, spender, amount);
-            true
+            ERC20::approve(spender, amount)
         }
 
         ////////////////////////////////
@@ -145,15 +134,15 @@ mod ERC4626 {
         }
 
         fn convert_to_shares(assets: u256) -> u256 {
-            if _total_supply::read() == 0.into() {
+            if ERC20::_total_supply::read() == 0.into() {
                 assets
             } else {
-                (assets * _total_supply::read()) / ERC4626::total_assets()
+                (assets * ERC20::_total_supply::read()) / ERC4626::total_assets()
             }
         }
 
         fn convert_to_assets(shares: u256) -> u256 {
-            let supply = _total_supply::read();
+            let supply = ERC20::_total_supply::read();
             if supply == 0.into() {
                 shares
             } else {
@@ -176,7 +165,7 @@ mod ERC4626 {
             let token = _asset::read();
             let self = get_contract_address();
             token.transfer_from(caller, get_contract_address(), assets);
-            _mint(receiver, shares);
+            ERC20::_mint(receiver, shares);
             //TODO emit deposit event
             shares
         }
@@ -186,10 +175,10 @@ mod ERC4626 {
         }
 
         fn preview_mint(shares: u256) -> u256 {
-            if _total_supply::read() == 0.into() {
+            if ERC20::_total_supply::read() == 0.into() {
                 shares
             } else {
-                (shares * ERC4626::total_assets()).div_up(_total_supply::read())
+                (shares * ERC4626::total_assets()).div_up(ERC20::_total_supply::read())
             }
         }
 
@@ -199,20 +188,20 @@ mod ERC4626 {
             let token = _asset::read();
             let self = get_contract_address();
             token.transfer_from(caller, self, assets);
-            _mint(receiver, shares);
+            ERC20::_mint(receiver, shares);
             //TODO emit Deposit event
             shares
         }
 
         fn max_withdraw(owner: ContractAddress) -> u256 {
-            ERC4626::convert_to_assets(_balances::read(owner))
+            ERC4626::convert_to_assets(ERC20::_balances::read(owner))
         }
 
         fn preview_withdraw(assets: u256) -> u256 {
-            if _total_supply::read() == 0.into() {
+            if ERC20::_total_supply::read() == 0.into() {
                 assets
             } else {
-                (assets * _total_supply::read()).div_up(ERC4626::total_assets())
+                (assets * ERC20::_total_supply::read()).div_up(ERC4626::total_assets())
             }
         }
 
@@ -220,14 +209,14 @@ mod ERC4626 {
             let shares = ERC4626::preview_withdraw(assets);
 
             if get_caller_address() != owner {
-                let allowed = _allowances::read((owner, get_caller_address()));
+                let allowed = ERC20::_allowances::read((owner, get_caller_address()));
                 if allowed != BoundedInt::<u256>::max() {
                     let new_allowed = allowed - shares;
-                    _allowances::write((owner, get_caller_address()), new_allowed);
+                    ERC20::_allowances::write((owner, get_caller_address()), new_allowed);
                 }
             }
 
-            _burn(owner, shares);
+            ERC20::_burn(owner, shares);
             let token = _asset::read();
             token.transfer(receiver, assets);
             //TODO emit Withdraw event
@@ -247,14 +236,14 @@ mod ERC4626 {
             assert(assets != 0.into(), 'ZERO_ASSETS');
 
             if get_caller_address() != owner {
-                let allowed = _allowances::read((owner, get_caller_address()));
+                let allowed = ERC20::_allowances::read((owner, get_caller_address()));
                 if allowed != BoundedInt::<u256>::max() {
                     let new_allowed = allowed - shares;
-                    _allowances::write((owner, get_caller_address()), new_allowed);
+                    ERC20::_allowances::write((owner, get_caller_address()), new_allowed);
                 }
             }
 
-            _burn(owner, shares);
+            ERC20::_burn(owner, shares);
             let token = _asset::read();
             token.transfer(receiver, assets);
             //TODO emit Withdraw event
@@ -273,57 +262,57 @@ mod ERC4626 {
 
     #[view]
     fn name() -> felt252 {
-        ERC4626::name()
+        ERC20::name()
     }
 
     #[view]
     fn symbol() -> felt252 {
-        ERC4626::symbol()
+        ERC20::symbol()
     }
 
     #[view]
     fn decimals() -> u8 {
-        ERC4626::decimals()
+        ERC20::decimals()
     }
 
     #[view]
     fn total_supply() -> u256 {
-        ERC4626::total_supply()
+        ERC20::total_supply()
     }
 
     #[view]
     fn balance_of(account: ContractAddress) -> u256 {
-        ERC4626::balance_of(account)
+        ERC20::balance_of(account)
     }
 
     #[view]
     fn allowance(owner: ContractAddress, spender: ContractAddress) -> u256 {
-        ERC4626::allowance(owner, spender)
+        ERC20::allowance(owner, spender)
     }
 
     #[external]
     fn transfer(recipient: ContractAddress, amount: u256) -> bool {
-        ERC4626::transfer(recipient, amount)
+        ERC20::transfer(recipient, amount)
     }
 
     #[external]
     fn transfer_from(sender: ContractAddress, recipient: ContractAddress, amount: u256) -> bool {
-        ERC4626::transfer_from(sender, recipient, amount)
+        ERC20::transfer_from(sender, recipient, amount)
     }
 
     #[external]
     fn approve(spender: ContractAddress, amount: u256) -> bool {
-        ERC4626::approve(spender, amount)
+        ERC20::approve(spender, amount)
     }
 
     #[external]
     fn increase_allowance(spender: ContractAddress, added_value: u256) -> bool {
-        _increase_allowance(spender, added_value)
+        ERC20::_increase_allowance(spender, added_value)
     }
 
     #[external]
     fn decrease_allowance(spender: ContractAddress, subtracted_value: u256) -> bool {
-        _decrease_allowance(spender, subtracted_value)
+        ERC20::_decrease_allowance(spender, subtracted_value)
     }
 
     ////////////////////////////////////////////////////////////////
@@ -414,60 +403,8 @@ mod ERC4626 {
     /// Internals
     ///
 
-    fn initializer(name_: felt252, symbol_: felt252, asset: ContractAddress) {
-        _name::write(name_);
-        _symbol::write(symbol_);
+    fn initializer(name: felt252, symbol: felt252, asset: ContractAddress) {
+        ERC20::initializer(name, symbol);
         _asset::write(IERC20Dispatcher { contract_address: asset });
-    }
-
-    fn _increase_allowance(spender: ContractAddress, added_value: u256) -> bool {
-        let caller = get_caller_address();
-        _approve(caller, spender, _allowances::read((caller, spender)) + added_value);
-        true
-    }
-
-    fn _decrease_allowance(spender: ContractAddress, subtracted_value: u256) -> bool {
-        let caller = get_caller_address();
-        _approve(caller, spender, _allowances::read((caller, spender)) - subtracted_value);
-        true
-    }
-
-    fn _mint(recipient: ContractAddress, amount: u256) {
-        assert(!recipient.is_zero(), 'ERC20: mint to 0');
-        _total_supply::write(_total_supply::read() + amount);
-        _balances::write(recipient, _balances::read(recipient) + amount);
-        Transfer(Zeroable::zero(), recipient, amount);
-    }
-
-    fn _burn(account: ContractAddress, amount: u256) {
-        assert(!account.is_zero(), 'ERC20: burn from 0');
-        _total_supply::write(_total_supply::read() - amount);
-        _balances::write(account, _balances::read(account) - amount);
-        Transfer(account, Zeroable::zero(), amount);
-    }
-
-    fn _approve(owner: ContractAddress, spender: ContractAddress, amount: u256) {
-        assert(!owner.is_zero(), 'ERC20: approve from 0');
-        assert(!spender.is_zero(), 'ERC20: approve to 0');
-        _allowances::write((owner, spender), amount);
-        Approval(owner, spender, amount);
-    }
-
-    fn _transfer(sender: ContractAddress, recipient: ContractAddress, amount: u256) {
-        assert(!sender.is_zero(), 'ERC20: transfer from 0');
-        assert(!recipient.is_zero(), 'ERC20: transfer to 0');
-        _balances::write(sender, _balances::read(sender) - amount);
-        _balances::write(recipient, _balances::read(recipient) + amount);
-        Transfer(sender, recipient, amount);
-    }
-
-    fn _spend_allowance(owner: ContractAddress, spender: ContractAddress, amount: u256) {
-        let current_allowance = _allowances::read((owner, spender));
-        let ONES_MASK = 0xffffffffffffffffffffffffffffffff_u128;
-        let is_unlimited_allowance =
-            current_allowance.low == ONES_MASK & current_allowance.high == ONES_MASK;
-        if !is_unlimited_allowance {
-            _approve(owner, spender, current_allowance - amount);
-        }
     }
 }
