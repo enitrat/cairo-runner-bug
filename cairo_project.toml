@@ -1,0 +1,4 @@
+[crate_roots]
+openzeppelin = "openzeppelin/"
+simple_vault = "src/"
+tests = "test/cairo-test"

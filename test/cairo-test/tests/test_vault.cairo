@@ -57,12 +57,11 @@ fn setup() -> (IMockERC20Dispatcher, IVaultDispatcher) {
 fn test_atomic_deposit_withdratest_atomic_deposit_withdraww() {
     let (underlying, vault) = setup();
     let alice = contract_address_const::<0x123456789>();
-// testing::set_contract_address(alice);
-// underlying.mint(alice, 100.into());
-// let vault_address = vault.contract_address;
-// //TODO fix: calling underlying.approve() here causes a failed calculating gas usage here
-// underlying.approve(vault.contract_address, 100.into());
-// 'lol'.print();
+    testing::set_contract_address(alice);
+    underlying.mint(alice, 100.into());
+    let vault_address = vault.contract_address;
+    //TODO fix: calling underlying.approve() here causes a failed calculating gas usage here
+    underlying.approve(vault.contract_address, 100.into());
 // let pre_deposit_bal = underlying.balance_of(alice);
 // vault.deposit(100.into(), alice);
 //Convert from solidity
