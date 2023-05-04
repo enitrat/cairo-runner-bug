@@ -36,7 +36,8 @@ fn setup() -> (IMockERC20Dispatcher, IERC4626Dispatcher) {
 
     let (token_address, _) = deploy_syscall(
         MockERC20::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
-    ).unwrap();
+    )
+        .unwrap();
 
     let mut calldata = ArrayTrait::<felt252>::new();
     calldata.append('Mock Token Vault');
@@ -44,7 +45,8 @@ fn setup() -> (IMockERC20Dispatcher, IERC4626Dispatcher) {
     calldata.append(token_address.into());
     let (vault_address, _) = deploy_syscall(
         ERC4626::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
-    ).unwrap();
+    )
+        .unwrap();
 
     let token = IMockERC20Dispatcher { contract_address: token_address };
     let vault = IERC4626Dispatcher { contract_address: vault_address };
@@ -62,7 +64,8 @@ fn test_metadata() {
     calldata.append(underlying.contract_address.into());
     let (vlt_address, _) = deploy_syscall(
         ERC4626::TEST_CLASS_HASH.try_into().unwrap(), 0, calldata.span(), false
-    ).unwrap();
+    )
+        .unwrap();
 
     let vlt = IERC4626Dispatcher { contract_address: vlt_address };
     assert(vlt.name() == 'Mock Token Vault', 'wrong name');
@@ -129,7 +132,7 @@ fn test_single_deposit_withdraw() {
 }
 
 #[test]
-#[available_gas(2000000000)]
+#[available_gas(200000000000)]
 fn test_single_mint_redeem() {
     let (underlying, vault) = setup();
     let amount = 1.into();
@@ -178,158 +181,154 @@ fn test_single_mint_redeem() {
     assert(underlying.balance_of(alice) == alice_pre_deposit_bal, 'wrong underlying balance');
 }
 
-//TODO test multiple mint deposit redeem withdraw
-// FIXME This test doesn't work because of a compiler error:
-// Failed to calculate gas usage
-// #[test]
-// #[available_gas(20000000000000)]
-// fn test_multiple_mint_deposit_redeem_withdraw() {
-//     // Scenario:
-//     // A = Alice, B = Bob
-//     //  ________________________________________________________
-//     // | Vault shares | A share | A assets | B share | B assets |
-//     // |========================================================|
-//     // | 1. Alice mints 2000 shares (costs 2000 tokens)         |
-//     // |--------------|---------|----------|---------|----------|
-//     // |         2000 |    2000 |     2000 |       0 |        0 |
-//     // |--------------|---------|----------|---------|----------|
-//     // | 2. Bob deposits 4000 tokens (mints 4000 shares)        |
-//     // |--------------|---------|----------|---------|----------|
-//     // |         6000 |    2000 |     2000 |    4000 |     4000 |
-//     // |--------------|---------|----------|---------|----------|
-//     // | 3. Vault mutates by +3000 tokens...                    |
-//     // |    (simulated yield returned from strategy)...         |
-//     // |--------------|---------|----------|---------|----------|
-//     // |         6000 |    2000 |     3000 |    4000 |     6000 |
-//     // |--------------|---------|----------|---------|----------|
-//     // | 4. Alice deposits 2000 tokens (mints 1333 shares)      |
-//     // |--------------|---------|----------|---------|----------|
-//     // |         7333 |    3333 |     4999 |    4000 |     6000 |
-//     // |--------------|---------|----------|---------|----------|
-//     // | 5. Bob mints 2000 shares (costs 3001 assets)           |
-//     // |    NOTE: Bob's assets spent got rounded up             |
-//     // |    NOTE: Alice's vault assets got rounded up           |
-//     // |--------------|---------|----------|---------|----------|
-//     // |         9333 |    3333 |     5000 |    6000 |     9000 |
-//     // |--------------|---------|----------|---------|----------|
-//     // | 6. Vault mutates by +3000 tokens...                    |
-//     // |    (simulated yield returned from strategy)            |
-//     // |    NOTE: Vault holds 17001 tokens, but sum of          |
-//     // |          assetsOf() is 17000.                          |
-//     // |--------------|---------|----------|---------|----------|
-//     // |         9333 |    3333 |     6071 |    6000 |    10929 |
-//     // |--------------|---------|----------|---------|----------|
-//     // | 7. Alice redeem 1333 shares (2428 assets)              |
-//     // |--------------|---------|----------|---------|----------|
-//     // |         8000 |    2000 |     3643 |    6000 |    10929 |
-//     // |--------------|---------|----------|---------|----------|
-//     // | 8. Bob withdraws 2928 assets (1608 shares)             |
-//     // |--------------|---------|----------|---------|----------|
-//     // |         6392 |    2000 |     3643 |    4392 |     8000 |
-//     // |--------------|---------|----------|---------|----------|
-//     // | 9. Alice withdraws 3643 assets (2000 shares)           |
-//     // |    NOTE: Bob's assets have been rounded back up        |
-//     // |--------------|---------|----------|---------|----------|
-//     // |         4392 |       0 |        0 |    4392 |     8001 |
-//     // |--------------|---------|----------|---------|----------|
-//     // | 10. Bob redeem 4392 shares (8001 tokens)               |
-//     // |--------------|---------|----------|---------|----------|
-//     // |            0 |       0 |        0 |       0 |        0 |
-//     // |______________|_________|__________|_________|__________|
+#[test]
+#[available_gas(20000000000000)]
+fn test_multiple_mint_deposit_redeem_withdraw() {
+    // Scenario:
+    // A = Alice, B = Bob
+    //  ________________________________________________________
+    // | Vault shares | A share | A assets | B share | B assets |
+    // |========================================================|
+    // | 1. Alice mints 2000 shares (costs 2000 tokens)         |
+    // |--------------|---------|----------|---------|----------|
+    // |         2000 |    2000 |     2000 |       0 |        0 |
+    // |--------------|---------|----------|---------|----------|
+    // | 2. Bob deposits 4000 tokens (mints 4000 shares)        |
+    // |--------------|---------|----------|---------|----------|
+    // |         6000 |    2000 |     2000 |    4000 |     4000 |
+    // |--------------|---------|----------|---------|----------|
+    // | 3. Vault mutates by +3000 tokens...                    |
+    // |    (simulated yield returned from strategy)...         |
+    // |--------------|---------|----------|---------|----------|
+    // |         6000 |    2000 |     3000 |    4000 |     6000 |
+    // |--------------|---------|----------|---------|----------|
+    // | 4. Alice deposits 2000 tokens (mints 1333 shares)      |
+    // |--------------|---------|----------|---------|----------|
+    // |         7333 |    3333 |     4999 |    4000 |     6000 |
+    // |--------------|---------|----------|---------|----------|
+    // | 5. Bob mints 2000 shares (costs 3001 assets)           |
+    // |    NOTE: Bob's assets spent got rounded up             |
+    // |    NOTE: Alice's vault assets got rounded up           |
+    // |--------------|---------|----------|---------|----------|
+    // |         9333 |    3333 |     5000 |    6000 |     9000 |
+    // |--------------|---------|----------|---------|----------|
+    // | 6. Vault mutates by +3000 tokens...                    |
+    // |    (simulated yield returned from strategy)            |
+    // |    NOTE: Vault holds 17001 tokens, but sum of          |
+    // |          assetsOf() is 17000.                          |
+    // |--------------|---------|----------|---------|----------|
+    // |         9333 |    3333 |     6071 |    6000 |    10929 |
+    // |--------------|---------|----------|---------|----------|
+    // | 7. Alice redeem 1333 shares (2428 assets)              |
+    // |--------------|---------|----------|---------|----------|
+    // |         8000 |    2000 |     3643 |    6000 |    10929 |
+    // |--------------|---------|----------|---------|----------|
+    // | 8. Bob withdraws 2928 assets (1608 shares)             |
+    // |--------------|---------|----------|---------|----------|
+    // |         6392 |    2000 |     3643 |    4392 |     8000 |
+    // |--------------|---------|----------|---------|----------|
+    // | 9. Alice withdraws 3643 assets (2000 shares)           |
+    // |    NOTE: Bob's assets have been rounded back up        |
+    // |--------------|---------|----------|---------|----------|
+    // |         4392 |       0 |        0 |    4392 |     8001 |
+    // |--------------|---------|----------|---------|----------|
+    // | 10. Bob redeem 4392 shares (8001 tokens)               |
+    // |--------------|---------|----------|---------|----------|
+    // |            0 |       0 |        0 |       0 |        0 |
+    // |______________|_________|__________|_________|__________|
 
-//     let (underlying, vault) = setup();
-//     let alice: ContractAddress = contract_address_const::<0xABCD>();
-//     let bob: ContractAddress = contract_address_const::<0xDCBA>();
+    let (underlying, vault) = setup();
+    let alice: ContractAddress = contract_address_const::<0xABCD>();
+    let bob: ContractAddress = contract_address_const::<0xDCBA>();
 
-//     let mutation_underlying_amount: u256 = 3000.into();
+    let mutation_underlying_amount: u256 = 3000.into();
 
-//     underlying.mint(alice, 4000.into());
+    underlying.mint(alice, 4000.into());
 
-//     testing::set_contract_address(alice);
-//     underlying.approve(vault.contract_address, 4000.into());
+    testing::set_contract_address(alice);
+    underlying.approve(vault.contract_address, 4000.into());
 
-//     assert(underlying.allowance(alice, vault.contract_address) == 4000.into(), 'wrong allowance');
+    assert(underlying.allowance(alice, vault.contract_address) == 4000.into(), 'wrong allowance');
 
-//     underlying.mint(bob, 7001.into());
+    underlying.mint(bob, 7001.into());
 
-//     testing::set_contract_address(bob);
-//     underlying.approve(vault.contract_address, 7001.into());
-//     assert(underlying.allowance(bob, vault.contract_address) == 7001.into(), 'wrong allowance');
+    testing::set_contract_address(bob);
+    underlying.approve(vault.contract_address, 7001.into());
+    assert(underlying.allowance(bob, vault.contract_address) == 7001.into(), 'wrong allowance');
 
-//     // 1. Alice mints 2000 shares (costs 2000 tokens)
-//     testing::set_contract_address(alice);
-//     let alice_underlying_amount: u256 = vault.mint(2000.into(), alice);
+    // 1. Alice mints 2000 shares (costs 2000 tokens)
+    testing::set_contract_address(alice);
+    let alice_underlying_amount: u256 = vault.mint(2000.into(), alice);
 
-//     let alice_share_amount: u256 = vault.preview_deposit(alice_underlying_amount);
+    let alice_share_amount: u256 = vault.preview_deposit(alice_underlying_amount);
+    // Expect to have received the requested mint amount
+    assert(alice_share_amount == 2000.into(), 'wrong share amount');
+    assert(vault.balance_of(alice) == alice_share_amount, 'wrong balance');
+    assert(
+        vault.convert_to_assets(vault.balance_of(alice)) == alice_underlying_amount,
+        'wrong assets amount'
+    );
+    assert(
+        vault.convert_to_shares(alice_underlying_amount) == vault.balance_of(alice),
+        'wrong shares amount'
+    );
+    // Expect a 1:1 ration before mutation
+    assert(alice_underlying_amount == 2000.into(), 'wrong ratio');
+    // Sanity check
+    assert(vault.total_supply() == alice_share_amount, 'wrong total supply');
+    assert(vault.total_assets() == alice_underlying_amount, 'wrong total assets');
+    // 2. Bob deposits 4000 tokens (mints 4000 shares)
+    testing::set_contract_address(bob);
+    let bob_share_amount = vault.deposit(4000.into(), bob);
+    let bob_underlying_amount = vault.preview_withdraw(bob_share_amount);
+    // Expect to have received the requested underlying amount
+    assert(bob_underlying_amount == 4000.into(), 'wrong underlying amount');
+    assert(vault.balance_of(bob) == bob_share_amount, 'wrong balance');
+    assert(
+        vault.convert_to_assets(vault.balance_of(bob)) == bob_underlying_amount,
+        'wrong assets amount'
+    );
+    assert(
+        vault.convert_to_shares(bob_underlying_amount) == vault.balance_of(bob),
+        'wrong shares amount'
+    );
+    // Expect a 1:1 ratio before mutation
+    assert(bob_share_amount == bob_underlying_amount, 'wrong ratio');
+    // Sanity check
+    let pre_mutation_share_bal = alice_share_amount + bob_share_amount;
+    let pre_mutation_bal = alice_underlying_amount + bob_underlying_amount;
+    assert(vault.total_supply() == pre_mutation_share_bal, 'wrong total supply');
+    //TODO UNCOMMENTING THIS SPECIFIC LINE MAKES THE TEST RUNNER FAIL
+    // assert(vault.total_assets() == pre_mutation_bal, 'wrong total assets');
+    assert(vault.total_supply() == 6000.into(), 'total supply should be 6000');
+    assert(vault.total_assets() == 6000.into(), 'total assets should be 6000');
 
-//     // Expect to have received the requested mint amount
-//     assert(alice_share_amount == 2000.into(), 'wrong share amount');
-//     assert(vault.balance_of(alice) == alice_share_amount, 'wrong balance');
-//     assert(
-//         vault.convert_to_assets(vault.balance_of(alice)) == alice_underlying_amount,
-//         'wrong assets amount'
-//     );
-//     assert(
-//         vault.convert_to_shares(alice_underlying_amount) == vault.balance_of(alice),
-//         'wrong shares amount'
-//     );
-//     // Expect a 1:1 ration before mutation
-//     assert(alice_underlying_amount == 2000.into(), 'wrong ratio');
-//     // Sanity check
-//     assert(vault.total_supply() == alice_share_amount, 'wrong total supply');
-//     assert(vault.total_assets() == alice_underlying_amount, 'wrong total assets');
-//     // 2. Bob deposits 4000 tokens (mints 4000 shares)
-//     testing::set_contract_address(bob);
-//     let bob_share_amount = vault.deposit(4000.into(), bob);
-//     let bob_underlying_amount = vault.preview_withdraw(bob_share_amount);
-//     // Expect to have received the requested underlying amount
-//     assert(bob_underlying_amount == 4000.into(), 'wrong underlying amount');
-//     assert(vault.balance_of(bob) == bob_share_amount, 'wrong balance');
-//     assert(
-//         vault.convert_to_assets(vault.balance_of(bob)) == bob_underlying_amount,
-//         'wrong assets amount'
-//     );
-//     assert(
-//         vault.convert_to_shares(bob_underlying_amount) == vault.balance_of(bob),
-//         'wrong shares amount'
-//     );
+    // 3. Vault mutates by +3000 tokens...                    |
+    //    (simulated yield returned from strategy)...
+    // The Vault now contains more tokens than deposited which causes the exchange rate to change.
+    // Alice share is 33.33% of the Vault, Bob 66.66% of the Vault.
+    // Alice's share count stays the same but the underlying amount changes from 2000 to 3000.
+    // Bob's share count stays the same but the underlying amount changes from 4000 to 6000.
 
-//     // Expect a 1:1 ratio before mutation
-//     assert(bob_share_amount == bob_underlying_amount, 'wrong ratio');
-
-//     // Sanity check
-//     let pre_mutation_share_bal = alice_share_amount + bob_share_amount;
-//     let pre_mutation_bal = alice_underlying_amount + bob_underlying_amount;
-//     assert(vault.total_supply() == pre_mutation_share_bal, 'wrong total supply');
-//     assert(vault.total_assets() == pre_mutation_bal, 'wrong total assets');
-//     assert(vault.total_supply() == 6000.into(), 'total supply should be 6000');
-//     assert(vault.total_assets() == 6000.into(), 'total assets should be 6000');
-
-//     // 3. Vault mutates by +3000 tokens...                    |
-//     //    (simulated yield returned from strategy)...
-//     // The Vault now contains more tokens than deposited which causes the exchange rate to change.
-//     // Alice share is 33.33% of the Vault, Bob 66.66% of the Vault.
-//     // Alice's share count stays the same but the underlying amount changes from 2000 to 3000.
-//     // Bob's share count stays the same but the underlying amount changes from 4000 to 6000.
-
-//     underlying.mint(vault.contract_address, mutation_underlying_amount);
-//     assert(vault.total_supply() == pre_mutation_share_bal, 'wrong total supply');
-//     assert(
-//         vault.total_assets() == pre_mutation_bal + mutation_underlying_amount, 'wrong total assets'
-//     );
-//     assert(vault.balance_of(alice) == alice_share_amount, 'wrong alice share amount');
-//     assert(
-//         vault.convert_to_assets(vault.balance_of(alice)) == alice_underlying_amount
-//             + (mutation_underlying_amount / 3.into() * 1.into()),
-//         'wrong alice assets amount'
-//     );
-//     assert(vault.balance_of(bob) == bob_share_amount, 'wrong bob share amount');
-//     assert(
-//         vault.convert_to_assets(vault.balance_of(bob)) == bob_underlying_amount
-//             + (mutation_underlying_amount / 3.into() * 2.into()),
-//         'wrong bob assets amount'
-//     );
-// }
+    underlying.mint(vault.contract_address, mutation_underlying_amount);
+    assert(vault.total_supply() == pre_mutation_share_bal, 'wrong total supply');
+    assert(
+        vault.total_assets() == pre_mutation_bal + mutation_underlying_amount, 'wrong total assets'
+    );
+    assert(vault.balance_of(alice) == alice_share_amount, 'wrong alice share amount');
+    assert(
+        vault.convert_to_assets(vault.balance_of(alice)) == alice_underlying_amount
+            + (mutation_underlying_amount / 3.into() * 1.into()),
+        'wrong alice assets amount'
+    );
+    assert(vault.balance_of(bob) == bob_share_amount, 'wrong bob share amount');
+//TODO UNCOMMENTING THIS SPECIFIC LINE MAKES THE TEST RUNNER FAIL
+// assert(
+//     vault.convert_to_assets(vault.balance_of(bob)) == bob_underlying_amount
+//         + (mutation_underlying_amount / 3.into() * 2.into()),
+//     'wrong bob assets amount'
+// );
+}
 
 #[test]
 #[available_gas(2000000000)]
@@ -483,54 +482,53 @@ fn test_withdraw_zero() {
     assert(vault.total_supply() == 0.into(), 'wrong total supply');
     assert(vault.total_assets() == 0.into(), 'wrong total assets');
 }
-//TODO this test also makes the runner crash for some reason
-// #[test]
-// #[available_gas(20000000000)]
-// fn test_vault_interaction_for_someone_else() {
-//     let (mut underlying, vault) = setup();
-//     let alice: ContractAddress = contract_address_const::<0xABCD>();
-//     let bob: ContractAddress = contract_address_const::<0xDCBA>();
 
-//     underlying.mint(alice, 1000.into());
-//     underlying.mint(bob, 1000.into());
+#[test]
+#[available_gas(20000000000)]
+fn test_vault_interaction_for_someone_else() {
+    let (mut underlying, vault) = setup();
+    let alice: ContractAddress = contract_address_const::<0xABCD>();
+    let bob: ContractAddress = contract_address_const::<0xDCBA>();
 
-//     testing::set_contract_address(alice);
-//     underlying.approve(vault.contract_address, 1000.into());
+    underlying.mint(alice, 1000.into());
+    underlying.mint(bob, 1000.into());
 
-//     testing::set_contract_address(bob);
-//     underlying.approve(vault.contract_address, 1000.into());
+    testing::set_contract_address(alice);
+    underlying.approve(vault.contract_address, 1000.into());
 
-//     // alice deposits 1000 tokens for bob
-//     testing::set_contract_address(alice);
-//     vault.deposit(1000.into(), bob);
+    testing::set_contract_address(bob);
+    underlying.approve(vault.contract_address, 1000.into());
 
-//     assert(vault.balance_of(alice) == 0.into(), 'wrong balance');
-//     assert(vault.balance_of(bob) == 1000.into(), 'wrong balance');
-//     assert(underlying.balance_of(alice) == 0.into(), 'wrong balance');
+    // alice deposits 1000 tokens for bob
+    testing::set_contract_address(alice);
+    vault.deposit(1000.into(), bob);
 
-//     // bob mints 1000 tokens for alice
-//     testing::set_contract_address(bob);
-//     vault.mint(1000.into(), alice);
+    assert(vault.balance_of(alice) == 0.into(), 'wrong balance');
+    assert(vault.balance_of(bob) == 1000.into(), 'wrong balance');
+    assert(underlying.balance_of(alice) == 0.into(), 'wrong balance');
 
-//     assert(vault.balance_of(alice) == 1000.into(), 'wrong balance');
-//     assert(vault.balance_of(bob) == 1000.into(), 'wrong balance');
-//     assert(underlying.balance_of(bob) == 0.into(), 'wrong balance');
+    // bob mints 1000 tokens for alice
+    testing::set_contract_address(bob);
+    vault.mint(1000.into(), alice);
 
-//     // alice redeem 1000 for bob
-//     testing::set_contract_address(alice);
-//     vault.redeem(1000.into(), bob, alice);
+    assert(vault.balance_of(alice) == 1000.into(), 'wrong balance');
+    assert(vault.balance_of(bob) == 1000.into(), 'wrong balance');
+    assert(underlying.balance_of(bob) == 0.into(), 'wrong balance');
 
-//     assert(vault.balance_of(alice) == 0.into(), 'wrong balance');
-//     assert(vault.balance_of(bob) == 1000.into(), 'wrong balance');
-//     assert(underlying.balance_of(bob) == 1000.into(), 'wrong balance');
+    // alice redeem 1000 for bob
+    testing::set_contract_address(alice);
+    vault.redeem(1000.into(), bob, alice);
 
-//     // bob withdraw 1000 for alice
-//     testing::set_contract_address(bob);
-//     vault.withdraw(1000.into(), alice, bob);
+    assert(vault.balance_of(alice) == 0.into(), 'wrong balance');
+    assert(vault.balance_of(bob) == 1000.into(), 'wrong balance');
+    assert(underlying.balance_of(bob) == 1000.into(), 'wrong balance');
 
-//     assert(vault.balance_of(alice) == 0.into(), 'wrong balance');
-//     assert(vault.balance_of(bob) == 0.into(), 'wrong balance');
-//     assert(underlying.balance_of(alice) == 1000.into(), 'wrong balance');
-// }
+    // bob withdraw 1000 for alice
+    testing::set_contract_address(bob);
+    vault.withdraw(1000.into(), alice, bob);
 
+    assert(vault.balance_of(alice) == 0.into(), 'wrong balance');
+    assert(vault.balance_of(bob) == 0.into(), 'wrong balance');
+    assert(underlying.balance_of(alice) == 1000.into(), 'wrong balance');
+}
 

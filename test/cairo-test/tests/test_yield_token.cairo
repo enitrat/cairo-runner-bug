@@ -52,7 +52,6 @@ fn test_balance_accrual() {
 
     testing::set_block_timestamp(60 * 60 * 24 + 1);
     let balance_after = token.balance_of(alice);
-    balance_after.print();
     assert(balance_after == 101.into(), 'wrong balance after 1 day');
 }
 

@@ -49,27 +49,11 @@ mod ERC4626 {
     use option::OptionTrait;
     use integer::BoundedInt;
     use debug::PrintTrait;
+    use simple_vault::utils::maths::MathRounding;
 
 
     struct Storage {
         _asset: IERC20Dispatcher
-    }
-
-    //TODO move this outside
-    trait MathRounding {
-        fn div_up(self: u256, rhs: u256) -> u256;
-    }
-
-    impl MathRoundingImpl of MathRounding {
-        fn div_up(self: u256, rhs: u256) -> u256 {
-            let q = self / rhs;
-            let r = self % rhs;
-            if (r == 0.into()) {
-                q
-            } else {
-                q + u256 { low: 1_u128, high: 0_u128 }
-            }
-        }
     }
 
     #[event]
@@ -77,6 +61,21 @@ mod ERC4626 {
 
     #[event]
     fn Approval(owner: ContractAddress, spender: ContractAddress, value: u256) {}
+
+    //     event Deposit(address indexed caller, address indexed owner, uint256 assets, uint256 shares);
+
+    #[event]
+    fn Deposit(caller: ContractAddress, owner: ContractAddress, asset: u256, shares: u256) {}
+
+    #[event]
+    fn Withdraw(
+        caller: ContractAddress,
+        receiver: ContractAddress,
+        owner: ContractAddress,
+        asset: u256,
+        shares: u256
+    ) {}
+
 
     impl ERC4626 of IERC4626 {
         ////////////////////////////////
@@ -166,7 +165,7 @@ mod ERC4626 {
             let self = get_contract_address();
             token.transfer_from(caller, get_contract_address(), assets);
             ERC20::_mint(receiver, shares);
-            //TODO emit deposit event
+            Deposit(caller, receiver, assets, shares);
             shares
         }
 
@@ -189,7 +188,7 @@ mod ERC4626 {
             let self = get_contract_address();
             token.transfer_from(caller, self, assets);
             ERC20::_mint(receiver, shares);
-            //TODO emit Deposit event
+            Deposit(caller, receiver, assets, shares);
             shares
         }
 
@@ -219,7 +218,7 @@ mod ERC4626 {
             ERC20::_burn(owner, shares);
             let token = _asset::read();
             token.transfer(receiver, assets);
-            //TODO emit Withdraw event
+            Withdraw(get_caller_address(), receiver, owner, assets, shares);
             shares
         }
 
@@ -246,7 +245,7 @@ mod ERC4626 {
             ERC20::_burn(owner, shares);
             let token = _asset::read();
             token.transfer(receiver, assets);
-            //TODO emit Withdraw event
+            Withdraw(get_caller_address(), receiver, owner, assets, shares);
             shares
         }
     }
@@ -262,7 +261,7 @@ mod ERC4626 {
 
     #[view]
     fn name() -> felt252 {
-        ERC20::name()
+        ERC4626::name()
     }
 
     #[view]
@@ -272,37 +271,37 @@ mod ERC4626 {
 
     #[view]
     fn decimals() -> u8 {
-        ERC20::decimals()
+        ERC4626::decimals()
     }
 
     #[view]
     fn total_supply() -> u256 {
-        ERC20::total_supply()
+        ERC4626::total_supply()
     }
 
     #[view]
     fn balance_of(account: ContractAddress) -> u256 {
-        ERC20::balance_of(account)
+        ERC4626::balance_of(account)
     }
 
     #[view]
     fn allowance(owner: ContractAddress, spender: ContractAddress) -> u256 {
-        ERC20::allowance(owner, spender)
+        ERC4626::allowance(owner, spender)
     }
 
     #[external]
     fn transfer(recipient: ContractAddress, amount: u256) -> bool {
-        ERC20::transfer(recipient, amount)
+        ERC4626::transfer(recipient, amount)
     }
 
     #[external]
     fn transfer_from(sender: ContractAddress, recipient: ContractAddress, amount: u256) -> bool {
-        ERC20::transfer_from(sender, recipient, amount)
+        ERC4626::transfer_from(sender, recipient, amount)
     }
 
     #[external]
     fn approve(spender: ContractAddress, amount: u256) -> bool {
-        ERC20::approve(spender, amount)
+        ERC4626::approve(spender, amount)
     }
 
     // #[external]
